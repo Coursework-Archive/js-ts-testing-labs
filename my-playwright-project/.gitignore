@@ -1,0 +1,22 @@
+# Deps & build artifacts
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Playwright outputs
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+trace.zip
+
+# (Only needed if you ever create these folders locally)
+playwright/.cache/
+playwright/.auth/
+
+# Auth/session artifacts (root or tests/)
+auth-state.json
+tests/auth-state.json
+
+
+

@@ -1,0 +1,22 @@
+// .vscode/launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Playwright: Debug test by title",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "args": ["playwright", "test", "--debug", "-g", "${input:testTitle}"],
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "testTitle",
+      "type": "promptString",
+      "description": "Enter test title (exact or regex)",
+      "default": "can log in and reach dashboard"
+    }
+  ]
+}
