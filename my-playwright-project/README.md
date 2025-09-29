@@ -31,14 +31,12 @@ Skip browser downloads at install and allow manual installs later:
 
 **PowerShell (Windows)**:
 ```shell
-$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1; npm install
-npx playwright install
+$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1; npm ci
 ```
 
 **Bash (Linux/macOS):**
 ```bash 
-PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install
-npx playwright install
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
 ```
 
 ## 🚀 Running Tests

@@ -8,18 +8,65 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     env:
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1   # use system Edge/Chrome; don't download
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ["Microsoft Edge", "Google Chrome"]  # drop Chrome if you only want Edge
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: 'npm'
-      - run: npm ci
-      - run: npx playwright test --project="Microsoft Edge"
-      - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
+          cache: npm
+
+      - name: Install deps (no browser download)
+        run: npm ci
+
+      - name: Confirm system browser is available
+        shell: pwsh
+        run: |
+          if ("${{ matrix.project }}" -eq "Microsoft Edge") {
+            $edge = (Get-Command msedge.exe -ErrorAction SilentlyContinue)
+            if (-not $edge) { throw "Microsoft Edge not found on runner." }
+            & $edge.Source --version
+          } else {
+            $chrome = (Get-Command chrome.exe -ErrorAction SilentlyContinue)
+            if (-not $chrome) { throw "Google Chrome not found on runner." }
+            & $chrome.Source --version
+          }
+
+      - name: Run Playwright tests (${{ matrix.project }})
+        run: npx playwright test --project="${{ matrix.project }}"
+
+      # Upload HTML report ONLY on failure (points at your configured folder)
+      - name: Upload HTML report (${{ matrix.project }})
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+          name: playwright-report-${{ matrix.project }}
+          path: artifacts/report/**
+          retention-days: 14
+
+      # Upload traces/videos/screenshots ONLY on failure (your outputDir)
+      - name: Upload run artifacts (${{ matrix.project }})
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-run-artifacts-${{ matrix.project }}
+          path: artifacts/traces/**
+          retention-days: 14
+
+      # Optional: upload only snapshot diffs/actuals from failures (not baselines)
+      - name: Upload snapshot diffs (${{ matrix.project }})
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-snapshot-diffs-${{ matrix.project }}
+          path: |
+            artifacts/traces/**/*-diff.png
+            artifacts/traces/**/*-actual.png
+          if-no-files-found: ignore
+          retention-days: 14
