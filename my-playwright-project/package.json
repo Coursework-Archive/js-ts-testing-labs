@@ -7,6 +7,7 @@
   "scripts": {
     "dev:server": "cross-env PORT=4000 tsx src/server.ts",
     "test": "playwright test",
+    "test:report": "cross-env OPEN_REPORT=always playwright test",
     "test:headless": "cross-env HEADLESS=1 playwright test",
     "test:headed": "playwright test --headed",
     "test:edge": "playwright test --project='Microsoft Edge'",
@@ -23,7 +24,7 @@
     "commit:patch": "git add -A && git commit -m \"%npm_config_m%\" && npm version patch",
     "commit:minor": "git add -A && git commit -m \"%npm_config_m%\" && npm version minor",
     "commit:major": "git add -A && git commit -m \"%npm_config_m%\" && npm version major",
-    "preversion": "npm test",
+    "preversion": "cross-env PREVERSION=1 playwright test --reporter=list",
     "postversion": "git push --follow-tags origin main",
     "help": "node -e \"const p=require('./package.json');const d=p.scriptDescriptions||{};const s=p.scripts;const keys=Object.keys(s);const pad=keys.reduce((m,k)=>Math.max(m,k.length),0);for(const k of keys){const desc=d[k]?` - ${d[k]}`:'';console.log((k+':').padEnd(pad+2)+s[k]+desc);}\""
   },

@@ -1,7 +1,14 @@
 // playwright.config.ts
 import { defineConfig, devices } from '@playwright/test';
 
-const HEADLESS = !!(process.env.CI || process.env.HEADLESS);  // default to headed unless CI or HEADLESS env var
+type OpenMode = 'always' | 'never' | 'on-failure';
+const HEADLESS = !!(process.env.CI || process.env.HEADLESS); 
+const IS_CI = !!process.env.CI;
+const IS_PREVERSION = !!process.env.PREVERSION;  // default to headed unless CI or HEADLESS env var
+const OPEN_REPORT: OpenMode =
+  (process.env.OPEN_REPORT as OpenMode) ??
+  ((IS_CI || IS_PREVERSION) ? 'never' : 'on-failure');
+
 
 export default defineConfig({
   testDir: './tests',                               // where tests live
@@ -17,13 +24,15 @@ export default defineConfig({
   
   reporter: [
     ['list'],                                       // console reporter
-    ['html', { outputFolder: 'artifacts/report/playwright-report', open: 'always' }], // HTML report, auto-open
+    ['html', { outputFolder: 'artifacts/report/playwright-report', 
+      open: OPEN_REPORT
+    }],
   ],
   outputDir: 'artifacts/traces',                           // this controls where traces/videos/screenshots go
 
   use: {
     baseURL: 'http://localhost:4000',               // base for page/request
-    headless: true,                                  // default; UI projects override below
+    headless: HEADLESS,                             // default; UI projects override below
     viewport: { width: 1280, height: 720 },         // default browser size
     ignoreHTTPSErrors: true,                        // tolerate self-signed certs, etc.
   },
@@ -32,8 +41,8 @@ export default defineConfig({
     command: 'npm run dev:server',                  // start your API/server
     url: 'http://localhost:4000',                   // wait until this URL is ready
     timeout: 120_000,                               // server boot allowance
-    reuseExistingServer: !process.env.CI,           // reuse locally; fresh on CI
     env: { PORT: '4000' },                          // force port to 4000
+    reuseExistingServer: !IS_CI || IS_PREVERSION,
   },
 
   projects: [
@@ -58,8 +67,8 @@ export default defineConfig({
         ...devices['Desktop Edge'],                 // Edge presets
         channel: 'msedge',                          // use system Edge (no download)
         storageState: 'tests/auth-state.json',      // start signed-in
-        headless: process.env.CI ? true : false,    // headed locally, headless on CI
-        trace: 'on',                                // artifacts for UI
+        headless: HEADLESS,                         // headed locally, headless on CI
+        trace: IS_CI ? 'retain-on-failure' : 'on',  // ← nicer on CI
         video: 'retain-on-failure',
         screenshot: 'only-on-failure',
         launchOptions: { slowMo: 200 },          // (optional) slow down UI for visibility
@@ -74,8 +83,8 @@ export default defineConfig({
         ...devices['Desktop Chrome'],               // Chrome presets
         channel: 'chrome',                          // use system Chrome (no download)
         storageState: 'tests/auth-state.json',      // start signed-in
-        headless: process.env.CI ? true : false,    // headed locally, headless on CI
-        trace: 'on',
+        headless: HEADLESS,                         // headed locally, headless on CI
+        trace: IS_CI ? 'retain-on-failure' : 'on',  // ← nicer on CI
         video: 'retain-on-failure',
         screenshot: 'only-on-failure',                 // hiDPI (retina) for Chrome
         launchOptions: { slowMo: 200 },          // (optional)
